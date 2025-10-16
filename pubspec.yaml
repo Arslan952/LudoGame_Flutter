@@ -37,13 +37,13 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   # Firebase
-  firebase_core:
-  firebase_auth: ^4.10.0
-  cloud_firestore:
-  firebase_database: ^10.4.0
-  firebase_storage: ^11.5.0
-  firebase_analytics: ^10.5.0
-  cloud_functions: ^4.2.0
+  firebase_core: ^4.2.0
+  firebase_auth: ^6.1.1
+  cloud_firestore: ^6.0.3
+  firebase_database: ^12.0.3
+  firebase_storage: ^13.0.3
+  firebase_analytics: ^12.0.3
+  cloud_functions: ^6.0.3
 
   # State Management
   get: ^4.6.5
