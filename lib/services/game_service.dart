@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/game_model.dart';
+import '../utils/ludo_move_logic.dart';
 
 class GameService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -8,9 +9,9 @@ class GameService {
     required List<String> playerIds,
     required List<String> playerNames,
     required int entryFee,
-    required int numPlayers,
   }) async {
     try {
+      int numPlayers = playerIds.length;
       List<int> colors = List.generate(numPlayers, (i) => i);
       Map<String, List<int>> tokenPositions = {};
 
@@ -22,14 +23,18 @@ class GameService {
         'playerIds': playerIds,
         'playerNames': playerNames,
         'playerColors': colors,
-        'currentTurnPlayerId': playerIds[0],
+        'currentTurnIndex': 0,
         'currentTurnDiceValue': 0,
+        'diceRolled': false,
+        'selectedTokenIndex': null,
         'tokenPositions': tokenPositions,
         'gameStatus': 'playing',
         'winnerId': null,
         'playerRanking': [],
         'entryFee': entryFee,
-        'totalPrize': entryFee * playerIds.length,
+        'totalPrize': entryFee * numPlayers,
+        'doubleCount': 0,
+        'gameEnded': false,
         'createdAt': Timestamp.now(),
         'updatedAt': Timestamp.now(),
       });
@@ -43,6 +48,7 @@ class GameService {
   Future<GameModel> getGame(String gameId) async {
     try {
       DocumentSnapshot doc = await _firestore.collection('games').doc(gameId).get();
+      if (!doc.exists) throw 'Game not found';
       return GameModel.fromFirestore(doc);
     } catch (e) {
       throw 'Failed to fetch game: $e';
@@ -54,15 +60,23 @@ class GameService {
         .collection('games')
         .doc(gameId)
         .snapshots()
-        .map((doc) => GameModel.fromFirestore(doc));
+        .map((doc) {
+      if (!doc.exists) throw 'Game not found';
+      return GameModel.fromFirestore(doc);
+    });
   }
 
-  Future<void> rollDice(String gameId, String playerId) async {
+  Future<int> rollDice(String gameId) async {
     try {
-      int diceValue = _randomDice();
+      int diceValue = (DateTime.now().millisecondsSinceEpoch % 6) + 1;
+
       await _firestore.collection('games').doc(gameId).update({
         'currentTurnDiceValue': diceValue,
+        'diceRolled': true,
+        'updatedAt': Timestamp.now(),
       });
+
+      return diceValue;
     } catch (e) {
       throw 'Failed to roll dice: $e';
     }
@@ -70,18 +84,19 @@ class GameService {
 
   Future<void> moveToken(
       String gameId,
-      String playerId,
       int tokenIndex,
       int newPosition,
+      String playerId,
       ) async {
     try {
       GameModel game = await getGame(gameId);
-      Map<String, List<int>> tokenPositions = game.tokenPositions;
+      Map<String, List<int>> positions = game.tokenPositions;
 
-      tokenPositions[playerId]![tokenIndex] = newPosition;
+      positions[playerId]![tokenIndex] = newPosition;
 
       await _firestore.collection('games').doc(gameId).update({
-        'tokenPositions': tokenPositions,
+        'tokenPositions': positions,
+        'selectedTokenIndex': tokenIndex,
         'updatedAt': Timestamp.now(),
       });
     } catch (e) {
@@ -89,19 +104,21 @@ class GameService {
     }
   }
 
-  Future<void> endTurn(String gameId, List<String> playerIds) async {
+  Future<void> nextTurn(String gameId) async {
     try {
       GameModel game = await getGame(gameId);
-      int currentIndex = playerIds.indexOf(game.currentTurnPlayerId);
-      String nextPlayerId = playerIds[(currentIndex + 1) % playerIds.length];
+      int nextTurnIndex = (game.currentTurnIndex + 1) % game.playerIds.length;
 
       await _firestore.collection('games').doc(gameId).update({
-        'currentTurnPlayerId': nextPlayerId,
+        'currentTurnIndex': nextTurnIndex,
         'currentTurnDiceValue': 0,
+        'diceRolled': false,
+        'selectedTokenIndex': null,
+        'doubleCount': 0,
         'updatedAt': Timestamp.now(),
       });
     } catch (e) {
-      throw 'Failed to end turn: $e';
+      throw 'Failed to change turn: $e';
     }
   }
 
@@ -115,6 +132,7 @@ class GameService {
         'gameStatus': 'completed',
         'winnerId': winnerId,
         'playerRanking': ranking,
+        'gameEnded': true,
         'updatedAt': Timestamp.now(),
       });
     } catch (e) {
@@ -122,5 +140,15 @@ class GameService {
     }
   }
 
-  int _randomDice() => (DateTime.now().millisecondsSinceEpoch % 6) + 1;
+  Future<void> resetDiceAndToken(String gameId) async {
+    try {
+      await _firestore.collection('games').doc(gameId).update({
+        'diceRolled': false,
+        'currentTurnDiceValue': 0,
+        'selectedTokenIndex': null,
+      });
+    } catch (e) {
+      throw 'Failed to reset: $e';
+    }
+  }
 }

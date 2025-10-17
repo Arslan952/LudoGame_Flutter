@@ -1,33 +1,30 @@
 import 'package:flutter/material.dart';
 import '../models/game_model.dart';
 import '../services/game_service.dart';
-import '../services/coin_service.dart';
-import '../utils/ludo_game_logic.dart';
+import '../utils/ludo_move_logic.dart';
 
 class GameProvider extends ChangeNotifier {
   final GameService _gameService = GameService();
-  final CoinService _coinService = CoinService();
 
   GameModel? _currentGame;
   int _currentDiceValue = 0;
-  bool _isMyTurn = false;
-  List<int> _validMoves = [];
+  bool _isRolling = false;
   bool _isLoading = false;
   String _errorMessage = '';
+  List<int> _validMoves = [];
 
   // Getters
   GameModel? get currentGame => _currentGame;
   int get currentDiceValue => _currentDiceValue;
-  bool get isMyTurn => _isMyTurn;
-  List<int> get validMoves => _validMoves;
+  bool get isRolling => _isRolling;
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
+  List<int> get validMoves => _validMoves;
 
   Future<void> createGame({
     required List<String> playerIds,
     required List<String> playerNames,
     required int entryFee,
-    required int numPlayers,
   }) async {
     try {
       _isLoading = true;
@@ -38,7 +35,6 @@ class GameProvider extends ChangeNotifier {
         playerIds: playerIds,
         playerNames: playerNames,
         entryFee: entryFee,
-        numPlayers: numPlayers,
       );
 
       await loadGame(gameId);
@@ -53,11 +49,10 @@ class GameProvider extends ChangeNotifier {
   Future<void> loadGame(String gameId) async {
     try {
       _isLoading = true;
-      _errorMessage = '';
       notifyListeners();
 
-      GameModel game = await _gameService.getGame(gameId);
-      _currentGame = game;
+      _currentGame = await _gameService.getGame(gameId);
+      _currentDiceValue = _currentGame?.currentTurnDiceValue ?? 0;
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -69,78 +64,106 @@ class GameProvider extends ChangeNotifier {
   void streamGame(String gameId) {
     _gameService.streamGame(gameId).listen((game) {
       _currentGame = game;
+      _currentDiceValue = game.currentTurnDiceValue;
+      _updateValidMoves();
+      notifyListeners();
+    }, onError: (e) {
+      _errorMessage = e.toString();
       notifyListeners();
     });
   }
 
   Future<void> rollDice(String gameId, String playerId) async {
     try {
-      await _gameService.rollDice(gameId, playerId);
-      await Future.delayed(const Duration(milliseconds: 500));
+      if (_isRolling || _currentGame?.diceRolled == true) return;
 
-      if (_currentGame != null) {
-        _currentDiceValue = _currentGame!.currentTurnDiceValue;
-        _updateValidMoves();
-      }
+      _isRolling = true;
+      notifyListeners();
+
+      int diceValue = await _gameService.rollDice(gameId);
+      _currentDiceValue = diceValue;
+      _updateValidMoves();
+
+      await Future.delayed(const Duration(milliseconds: 800));
     } catch (e) {
       _errorMessage = e.toString();
+    } finally {
+      _isRolling = false;
+      notifyListeners();
     }
-    notifyListeners();
   }
 
-  Future<void> moveToken(
+  Future<bool> moveToken(
       String gameId,
-      String playerId,
       int tokenIndex,
-      int newPosition,
+      String playerId,
       ) async {
     try {
-      await _gameService.moveToken(gameId, playerId, tokenIndex, newPosition);
+      if (_currentGame == null || !_validMoves.contains(tokenIndex)) {
+        return false;
+      }
+
+      int currentPos = _currentGame!.tokenPositions[playerId]?[tokenIndex] ?? -1;
+      int newPos = LudoMoveLogic.moveToken(
+        currentPos,
+        _currentDiceValue,
+        _currentGame!.playerColors[_currentGame!.playerIds.indexOf(playerId)],
+      );
+
+      await _gameService.moveToken(gameId, tokenIndex, newPos, playerId);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
+    }
+  }
+
+  Future<void> nextTurn(String gameId) async {
+    try {
+      await _gameService.nextTurn(gameId);
+      await Future.delayed(const Duration(milliseconds: 500));
     } catch (e) {
       _errorMessage = e.toString();
     }
-    notifyListeners();
   }
 
   void _updateValidMoves() {
-    if (_currentGame == null) return;
-    _validMoves.clear();
-  }
-
-  Future<void> endTurn(String gameId, List<String> playerIds) async {
-    try {
-      await _gameService.endTurn(gameId, playerIds);
-      _currentDiceValue = 0;
-    } catch (e) {
-      _errorMessage = e.toString();
+    if (_currentGame == null) {
+      _validMoves = [];
+      return;
     }
-    notifyListeners();
+
+    String currentPlayerId = _currentGame!.currentPlayerId;
+    List<int> tokenPositions = _currentGame!.tokenPositions[currentPlayerId] ?? [];
+
+    _validMoves = [];
+    for (int i = 0; i < tokenPositions.length; i++) {
+      if (LudoMoveLogic.canMoveToken(
+        tokenPositions[i],
+        _currentDiceValue,
+        _currentGame!.playerColors[_currentGame!.currentTurnIndex],
+      )) {
+        _validMoves.add(i);
+      }
+    }
   }
 
   Future<void> completeGame(
       String gameId,
       String winnerId,
       List<String> ranking,
-      int entryFee,
-      String currentUserId,
       ) async {
     try {
       await _gameService.completeGame(gameId, winnerId, ranking);
-
-      int winnings = LudoGameLogic.calculateWinnings(entryFee, ranking.length, 1);
-      if (winnerId == currentUserId) {
-        await _coinService.addCoins(winnerId, winnings, 'Game won');
-      }
     } catch (e) {
       _errorMessage = e.toString();
     }
-    notifyListeners();
   }
 
   void resetGame() {
     _currentGame = null;
     _currentDiceValue = 0;
-    _isMyTurn = false;
+    _isRolling = false;
     _validMoves = [];
     _errorMessage = '';
     notifyListeners();

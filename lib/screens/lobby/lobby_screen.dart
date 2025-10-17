@@ -242,12 +242,18 @@ class _LobbyScreenState extends State<LobbyScreen> {
     if (coinProvider.canAfford(entryFee)) {
       Navigator.pushNamed(
         context,
-        AppRoutes.gameBoard,
-        arguments: {'numPlayers': numPlayers, 'entryFee': entryFee},
+        AppRoutes.matchmaking,
+        arguments: {
+          'numPlayers': numPlayers,
+          'entryFee': entryFee,
+        },
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Insufficient coins!')),
+        const SnackBar(
+          content: Text('Insufficient coins!'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
