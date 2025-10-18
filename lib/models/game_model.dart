@@ -56,7 +56,7 @@ class GameModel {
       selectedTokenIndex: data['selectedTokenIndex'],
       tokenPositions: Map<String, List<int>>.from(
         (data['tokenPositions'] as Map? ?? {}).map(
-              (k, v) => MapEntry(k, List<int>.from(v ?? [])),
+          (k, v) => MapEntry(k, List<int>.from(v ?? [])),
         ),
       ),
       gameStatus: data['gameStatus'] ?? 'playing',

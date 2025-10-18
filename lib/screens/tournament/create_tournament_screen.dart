@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../provider/tournamentProvider.dart';
-import '../../utils/validators.dart';
 
 class CreateTournamentScreen extends StatefulWidget {
-  const CreateTournamentScreen({Key? key}) : super(key: key);
+  const CreateTournamentScreen({super.key});
 
   @override
   State<CreateTournamentScreen> createState() => _CreateTournamentScreenState();
@@ -56,7 +55,10 @@ class _CreateTournamentScreenState extends State<CreateTournamentScreen> {
                     const SizedBox(height: 24),
                     Text(
                       'Max Players: $_maxPlayers',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Slider(
                       value: _maxPlayers.toDouble(),
@@ -72,7 +74,10 @@ class _CreateTournamentScreenState extends State<CreateTournamentScreen> {
                     const SizedBox(height: 24),
                     Text(
                       'Entry Fee: $_entryFee Coins',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     Slider(
                       value: _entryFee.toDouble(),
@@ -87,13 +92,15 @@ class _CreateTournamentScreenState extends State<CreateTournamentScreen> {
                     ),
                     const SizedBox(height: 32),
                     ElevatedButton(
-                      onPressed: tournamentProvider.isLoading ? null : _createTournament,
+                      onPressed: tournamentProvider.isLoading
+                          ? null
+                          : _createTournament,
                       child: tournamentProvider.isLoading
                           ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : const Text('Create Tournament'),
                     ),
                   ],
@@ -117,9 +124,9 @@ class _CreateTournamentScreenState extends State<CreateTournamentScreen> {
         prizePool,
       );
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tournament created!')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Tournament created!')));
 
       Future.delayed(const Duration(seconds: 1), () {
         Navigator.pop(context);

@@ -7,28 +7,30 @@ class TournamentService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   Future<String> createTournament(
-      String name,
-      int maxPlayers,
-      int entryFee,
-      List<int> prizePool,
-      ) async {
+    String name,
+    int maxPlayers,
+    int entryFee,
+    List<int> prizePool,
+  ) async {
     try {
       User? user = _auth.currentUser;
       if (user == null) throw 'User not authenticated';
 
-      DocumentReference tournamentRef = await _firestore.collection('tournaments').add({
-        'name': name,
-        'maxPlayers': maxPlayers,
-        'entryFee': entryFee,
-        'prizePool': prizePool,
-        'status': 'open',
-        'registeredPlayers': [user.uid],
-        'bracket': {},
-        'createdAt': Timestamp.now(),
-        'startDate': Timestamp.now(),
-        'endDate': null,
-        'creatorId': user.uid,
-      });
+      DocumentReference tournamentRef = await _firestore
+          .collection('tournaments')
+          .add({
+            'name': name,
+            'maxPlayers': maxPlayers,
+            'entryFee': entryFee,
+            'prizePool': prizePool,
+            'status': 'open',
+            'registeredPlayers': [user.uid],
+            'bracket': {},
+            'createdAt': Timestamp.now(),
+            'startDate': Timestamp.now(),
+            'endDate': null,
+            'creatorId': user.uid,
+          });
 
       return tournamentRef.id;
     } catch (e) {
@@ -38,7 +40,10 @@ class TournamentService {
 
   Future<TournamentModel> getTournament(String tournamentId) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('tournaments').doc(tournamentId).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('tournaments')
+          .doc(tournamentId)
+          .get();
       if (doc.exists) {
         return TournamentModel.fromFirestore(doc);
       }

@@ -1,6 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/game_model.dart';
-import '../utils/ludo_move_logic.dart';
 
 class GameService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -47,7 +46,10 @@ class GameService {
 
   Future<GameModel> getGame(String gameId) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('games').doc(gameId).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('games')
+          .doc(gameId)
+          .get();
       if (!doc.exists) throw 'Game not found';
       return GameModel.fromFirestore(doc);
     } catch (e) {
@@ -56,11 +58,7 @@ class GameService {
   }
 
   Stream<GameModel> streamGame(String gameId) {
-    return _firestore
-        .collection('games')
-        .doc(gameId)
-        .snapshots()
-        .map((doc) {
+    return _firestore.collection('games').doc(gameId).snapshots().map((doc) {
       if (!doc.exists) throw 'Game not found';
       return GameModel.fromFirestore(doc);
     });
@@ -83,11 +81,11 @@ class GameService {
   }
 
   Future<void> moveToken(
-      String gameId,
-      int tokenIndex,
-      int newPosition,
-      String playerId,
-      ) async {
+    String gameId,
+    int tokenIndex,
+    int newPosition,
+    String playerId,
+  ) async {
     try {
       GameModel game = await getGame(gameId);
       Map<String, List<int>> positions = game.tokenPositions;
@@ -123,10 +121,10 @@ class GameService {
   }
 
   Future<void> completeGame(
-      String gameId,
-      String winnerId,
-      List<String> ranking,
-      ) async {
+    String gameId,
+    String winnerId,
+    List<String> ranking,
+  ) async {
     try {
       await _firestore.collection('games').doc(gameId).update({
         'gameStatus': 'completed',

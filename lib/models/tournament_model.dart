@@ -42,7 +42,9 @@ class TournamentModel {
       bracket: data['bracket'] ?? {},
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       startDate: (data['startDate'] as Timestamp).toDate(),
-      endDate: data['endDate'] != null ? (data['endDate'] as Timestamp).toDate() : null,
+      endDate: data['endDate'] != null
+          ? (data['endDate'] as Timestamp).toDate()
+          : null,
       creatorId: data['creatorId'] ?? '',
     );
   }

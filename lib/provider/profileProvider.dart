@@ -3,7 +3,6 @@ import '../models/user_model.dart';
 import '../services/firestore_service.dart';
 import '../services/coin_service.dart';
 
-
 class ProfileProvider extends ChangeNotifier {
   final FirestoreService _firestoreService = FirestoreService();
   final CoinService _coinService = CoinService();
@@ -15,8 +14,11 @@ class ProfileProvider extends ChangeNotifier {
 
   // Getters
   UserModel? get userProfile => _userProfile;
+
   bool get isLoading => _isLoading;
+
   bool get hasClaimedToday => _hasClaimedToday;
+
   String get errorMessage => _errorMessage;
 
   Future<void> loadProfile(String uid) async {

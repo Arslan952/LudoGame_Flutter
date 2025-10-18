@@ -4,9 +4,8 @@ import 'package:provider/provider.dart';
 import '../../provider/authProvider.dart';
 import '../../provider/profileProvider.dart';
 
-
 class ProfileScreen extends StatefulWidget {
-  const ProfileScreen({Key? key}) : super(key: key);
+  const ProfileScreen({super.key});
 
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
@@ -18,7 +17,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     super.initState();
     final authProvider = context.read<AuthProvider>();
     if (authProvider.currentUser != null) {
-      context.read<ProfileProvider>().loadProfile(authProvider.currentUser!.uid);
+      context.read<ProfileProvider>().loadProfile(
+        authProvider.currentUser!.uid,
+      );
     }
   }
 
@@ -48,7 +49,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     radius: 50,
                     child: Text(
                       user.username[0].toUpperCase(),
-                      style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),

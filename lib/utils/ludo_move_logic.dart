@@ -5,8 +5,76 @@ class LudoMoveLogic {
 
   // Each player's path on the board
   static const Map<int, List<int>> playerPaths = {
-    0: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 29, 44, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 47, 32, 17, 16],
-    1: [14, 29, 44, 59, 58, 57, 56, 55, 54, 53, 52, 51, 50, 49, 48, 33, 18, 3, 2, 1, 0, 15, 30, 45, 60, 61, 62, 63, 64, 65, 50, 35, 20],
+    0: [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      29,
+      44,
+      59,
+      58,
+      57,
+      56,
+      55,
+      54,
+      53,
+      52,
+      51,
+      50,
+      49,
+      48,
+      47,
+      32,
+      17,
+      16,
+    ],
+    1: [
+      14,
+      29,
+      44,
+      59,
+      58,
+      57,
+      56,
+      55,
+      54,
+      53,
+      52,
+      51,
+      50,
+      49,
+      48,
+      33,
+      18,
+      3,
+      2,
+      1,
+      0,
+      15,
+      30,
+      45,
+      60,
+      61,
+      62,
+      63,
+      64,
+      65,
+      50,
+      35,
+      20,
+    ],
     2: [210, 195, 180, 165, 150, 135, 120, 105, 90, 75, 60, 45, 30, 15, 0],
     3: [119, 104, 89, 74, 59, 44, 29, 14, 13, 12, 11, 10, 9, 8, 7],
   };
@@ -18,10 +86,10 @@ class LudoMoveLogic {
 
   /// Check if player can move any token
   static bool hasValidMoves(
-      List<int> tokenPositions,
-      int diceValue,
-      int playerIndex,
-      ) {
+    List<int> tokenPositions,
+    int diceValue,
+    int playerIndex,
+  ) {
     for (int i = 0; i < tokenPositions.length; i++) {
       if (canMoveToken(tokenPositions[i], diceValue, playerIndex)) {
         return true;
@@ -32,10 +100,10 @@ class LudoMoveLogic {
 
   /// Check if a specific token can be moved
   static bool canMoveToken(
-      int currentPosition,
-      int diceValue,
-      int playerIndex,
-      ) {
+    int currentPosition,
+    int diceValue,
+    int playerIndex,
+  ) {
     // Token at home (-1)
     if (currentPosition == -1) {
       return diceValue == 6;
@@ -51,11 +119,7 @@ class LudoMoveLogic {
   }
 
   /// Calculate new position for token
-  static int moveToken(
-      int currentPosition,
-      int diceValue,
-      int playerIndex,
-      ) {
+  static int moveToken(int currentPosition, int diceValue, int playerIndex) {
     // Starting from home with 6
     if (currentPosition == -1 && diceValue == 6) {
       return 0;
@@ -89,10 +153,10 @@ class LudoMoveLogic {
 
   /// Get tokens that can be captured at position
   static List<int> getCapturableTokens(
-      int position,
-      List<List<int>> allTokenPositions,
-      int playerIndex,
-      ) {
+    int position,
+    List<List<int>> allTokenPositions,
+    int playerIndex,
+  ) {
     // Can't capture in safe zones or home
     if (isSafeZone(position, playerIndex) || position < 0) {
       return [];
@@ -115,10 +179,10 @@ class LudoMoveLogic {
 
   /// Get all valid token indices that can be moved
   static List<int> getValidTokenMoves(
-      List<int> tokenPositions,
-      int diceValue,
-      int playerIndex,
-      ) {
+    List<int> tokenPositions,
+    int diceValue,
+    int playerIndex,
+  ) {
     List<int> validTokens = [];
 
     for (int i = 0; i < tokenPositions.length; i++) {
@@ -151,12 +215,12 @@ class LudoMoveLogic {
 
   /// Check if move is valid based on Ludo rules
   static bool isValidMove(
-      int tokenIndex,
-      int currentPosition,
-      int diceValue,
-      List<int> tokenPositions,
-      int playerIndex,
-      ) {
+    int tokenIndex,
+    int currentPosition,
+    int diceValue,
+    List<int> tokenPositions,
+    int playerIndex,
+  ) {
     // Token must exist
     if (tokenIndex < 0 || tokenIndex >= tokenPositions.length) {
       return false;

@@ -6,7 +6,9 @@ class CoinService {
   Future<void> deductCoins(String playerId, int amount, String reason) async {
     try {
       await _firestore.runTransaction((transaction) async {
-        DocumentReference userRef = _firestore.collection('users').doc(playerId);
+        DocumentReference userRef = _firestore
+            .collection('users')
+            .doc(playerId);
         DocumentSnapshot snapshot = await transaction.get(userRef);
 
         int currentCoins = snapshot['coins'] ?? 0;
@@ -15,9 +17,7 @@ class CoinService {
           throw 'Insufficient coins';
         }
 
-        transaction.update(userRef, {
-          'coins': currentCoins - amount,
-        });
+        transaction.update(userRef, {'coins': currentCoins - amount});
 
         await _firestore.collection('coin_transactions').add({
           'playerId': playerId,
@@ -36,14 +36,14 @@ class CoinService {
   Future<void> addCoins(String playerId, int amount, String reason) async {
     try {
       await _firestore.runTransaction((transaction) async {
-        DocumentReference userRef = _firestore.collection('users').doc(playerId);
+        DocumentReference userRef = _firestore
+            .collection('users')
+            .doc(playerId);
         DocumentSnapshot snapshot = await transaction.get(userRef);
 
         int currentCoins = snapshot['coins'] ?? 0;
 
-        transaction.update(userRef, {
-          'coins': currentCoins + amount,
-        });
+        transaction.update(userRef, {'coins': currentCoins + amount});
 
         await _firestore.collection('coin_transactions').add({
           'playerId': playerId,
@@ -61,7 +61,10 @@ class CoinService {
 
   Future<int> getPlayerCoins(String playerId) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('users').doc(playerId).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(playerId)
+          .get();
       return doc['coins'] ?? 0;
     } catch (e) {
       throw 'Failed to fetch coins: $e';

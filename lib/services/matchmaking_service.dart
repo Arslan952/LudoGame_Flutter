@@ -4,11 +4,11 @@ class MatchmakingService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   Future<void> addPlayerToQueue(
-      String playerId,
-      String playerName,
-      int numPlayers,
-      int entryFee,
-      ) async {
+    String playerId,
+    String playerName,
+    int numPlayers,
+    int entryFee,
+  ) async {
     try {
       await _firestore.collection('matchmaking_queue').add({
         'playerId': playerId,
@@ -29,7 +29,11 @@ class MatchmakingService {
         .where('playerId', isEqualTo: playerId)
         .limit(1)
         .snapshots()
-        .map((snapshot) => snapshot.docs.isNotEmpty ? snapshot.docs.first : null as DocumentSnapshot)
+        .map(
+          (snapshot) => snapshot.docs.isNotEmpty
+              ? snapshot.docs.first
+              : null as DocumentSnapshot,
+        )
         .where((event) => event != null);
   }
 

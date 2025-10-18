@@ -6,9 +6,8 @@ import '../../provider/authProvider.dart';
 import '../../provider/coinProvider.dart';
 import '../../services/route/route.dart';
 
-
 class LobbyScreen extends StatefulWidget {
-  const LobbyScreen({Key? key}) : super(key: key);
+  const LobbyScreen({super.key});
 
   @override
   State<LobbyScreen> createState() => _LobbyScreenState();
@@ -35,7 +34,10 @@ class _LobbyScreenState extends State<LobbyScreen> {
               return Padding(
                 padding: const EdgeInsets.all(16),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.amber,
                     borderRadius: BorderRadius.circular(20),
@@ -74,7 +76,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                   '2 Player',
                   '${AppConstants.ENTRY_FEE_2P} Coins',
                   Colors.blue,
-                      () => _startGame(context, 2),
+                  () => _startGame(context, 2),
                 ),
                 _buildGameModeCard(
                   context,
@@ -82,7 +84,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                   '3 Player',
                   '${AppConstants.ENTRY_FEE_3P} Coins',
                   Colors.green,
-                      () => _startGame(context, 3),
+                  () => _startGame(context, 3),
                 ),
                 _buildGameModeCard(
                   context,
@@ -90,7 +92,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                   '4 Player',
                   '${AppConstants.ENTRY_FEE_4P} Coins',
                   Colors.purple,
-                      () => _startGame(context, 4),
+                  () => _startGame(context, 4),
                 ),
                 _buildGameModeCard(
                   context,
@@ -98,7 +100,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                   'Tournaments',
                   'Join Now',
                   Colors.orange,
-                      () => Navigator.pushNamed(context, AppRoutes.tournaments),
+                  () => Navigator.pushNamed(context, AppRoutes.tournaments),
                 ),
               ],
             ),
@@ -122,19 +124,22 @@ class _LobbyScreenState extends State<LobbyScreen> {
   }
 
   Widget _buildGameModeCard(
-      BuildContext context,
-      IconData icon,
-      String title,
-      String subtitle,
-      Color color,
-      VoidCallback onTap,
-      ) {
+    BuildContext context,
+    IconData icon,
+    String title,
+    String subtitle,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [color.withOpacity(0.7), color.withOpacity(0.4)],
+            colors: [
+              color.withValues(alpha: 0.7),
+              color.withValues(alpha: 0.4),
+            ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -177,10 +182,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
-                    const CircleAvatar(
-                      radius: 30,
-                      child: Icon(Icons.person),
-                    ),
+                    const CircleAvatar(radius: 30, child: Icon(Icons.person)),
                     const SizedBox(height: 8),
                     Text(
                       authProvider.userModel?.username ?? 'User',
@@ -243,10 +245,7 @@ class _LobbyScreenState extends State<LobbyScreen> {
       Navigator.pushNamed(
         context,
         AppRoutes.matchmaking,
-        arguments: {
-          'numPlayers': numPlayers,
-          'entryFee': entryFee,
-        },
+        arguments: {'numPlayers': numPlayers, 'entryFee': entryFee},
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(

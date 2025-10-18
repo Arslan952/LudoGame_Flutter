@@ -4,9 +4,8 @@ import '../../provider/authProvider.dart';
 import '../../services/route/route.dart';
 import '../../utils/validators.dart';
 
-
 class SignupScreen extends StatefulWidget {
-  const SignupScreen({Key? key}) : super(key: key);
+  const SignupScreen({super.key});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
@@ -111,10 +110,10 @@ class _SignupScreenState extends State<SignupScreen> {
                       onPressed: authProvider.isLoading ? null : _handleSignUp,
                       child: authProvider.isLoading
                           ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : const Text('Sign Up'),
                     ),
                     const SizedBox(height: 16),

@@ -2,20 +2,20 @@ import 'package:flutter/material.dart';
 import 'package:ludo_game/screens/game/widget/dice_widget.dart';
 import 'package:ludo_game/screens/game/widget/ludo_board.dart';
 import 'package:provider/provider.dart';
+import 'dart:async';
 
 import '../../models/game_model.dart';
 import '../../provider/gameProvider.dart';
-
 
 class GameBoardScreen extends StatefulWidget {
   final String gameId;
   final String currentUserId;
 
   const GameBoardScreen({
-    Key? key,
+    super.key,
     required this.gameId,
     required this.currentUserId,
-  }) : super(key: key);
+  });
 
   @override
   State<GameBoardScreen> createState() => _GameBoardScreenState();
@@ -23,13 +23,21 @@ class GameBoardScreen extends StatefulWidget {
 
 class _GameBoardScreenState extends State<GameBoardScreen> {
   int? selectedTokenIndex;
+  late StreamSubscription<dynamic> gameSubscription;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<GameProvider>().streamGame(widget.gameId);
+      final gameProvider = context.read<GameProvider>();
+      gameProvider.streamGame(widget.gameId);
     });
+  }
+
+  @override
+  void dispose() {
+    gameSubscription.cancel();
+    super.dispose();
   }
 
   @override
@@ -50,15 +58,11 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       body: Consumer<GameProvider>(
         builder: (context, gameProvider, child) {
           if (gameProvider.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (gameProvider.currentGame == null) {
-            return const Center(
-              child: Text('Game not found'),
-            );
+            return const Center(child: Text('Game not found'));
           }
 
           final game = gameProvider.currentGame!;
@@ -66,10 +70,18 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           final currentPlayerIndex = game.playerIds.indexOf(widget.currentUserId);
           final playerColor = _getPlayerColor(currentPlayerIndex);
 
+          print('DEBUG SCREEN: currentPlayerId=${game.currentPlayerId}');
+          print('DEBUG SCREEN: currentUserId=${widget.currentUserId}');
+          print('DEBUG SCREEN: isMyTurn=$isMyTurn');
+          print('DEBUG SCREEN: diceRolled=${game.diceRolled}');
+          print('DEBUG SCREEN: currentTurnIndex=${game.currentTurnIndex}');
+          print('DEBUG SCREEN: playerIds=${game.playerIds}');
+
           return Column(
             children: [
               // Top player info
-              _buildPlayerInfoBar(game, 1),
+              if (game.playerIds.isNotEmpty)
+                _buildPlayerInfoBar(game, game.currentTurnIndex),
 
               // Game board
               Expanded(
@@ -84,7 +96,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
+                              color: Colors.black.withValues(alpha: 0.1),
                               blurRadius: 20,
                               offset: const Offset(0, 10),
                             ),
@@ -94,8 +106,12 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                           borderRadius: BorderRadius.circular(16),
                           child: GestureDetector(
                             onTapUp: (details) {
-                              if (isMyTurn && game.diceRolled) {
-                                _handleBoardTap(context, details, game);
+
+                              if (
+                              // isMyTurn &&
+                                  game.diceRolled && gameProvider.validMoves.isNotEmpty) {
+                                print("Tap Record");
+                                _handleBoardTap(context, details, game, gameProvider);
                               }
                             },
                             child: CustomPaint(
@@ -113,9 +129,6 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                 ),
               ),
 
-              // Bottom player info
-              _buildPlayerInfoBar(game, 3),
-
               // Dice and controls
               Container(
                 padding: const EdgeInsets.all(16),
@@ -123,7 +136,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                   color: Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 10,
                       offset: const Offset(0, -5),
                     ),
@@ -139,8 +152,8 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                       ),
                       decoration: BoxDecoration(
                         color: isMyTurn
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.grey.withOpacity(0.1),
+                            ? Colors.green.withValues(alpha: 0.1)
+                            : Colors.grey.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
                           color: isMyTurn ? Colors.green : Colors.grey,
@@ -176,29 +189,68 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
                         // Left player info
-                        _buildSidePlayerInfo(game, 0),
+                        if (game.playerIds.length > 0)
+                          _buildSidePlayerInfo(game, 0),
 
                         // Dice in center
                         Column(
                           children: [
-                            DiceWidget(
-                              value: game.currentTurnDiceValue > 0
-                                  ? game.currentTurnDiceValue
-                                  : 1,
-                              isRolling: gameProvider.isRolling,
-                              isEnabled: isMyTurn && !game.diceRolled,
-                              diceColor: playerColor,
-                              onRoll: isMyTurn && !game.diceRolled
-                                  ? () => _rollDice(context, gameProvider)
-                                  : null,
+                            // DEBUG: Show why dice is disabled
+                            if (!isMyTurn)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Text(
+                                  'Not your turn',
+                                  style: TextStyle(
+                                    color: Colors.red,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            if (game.diceRolled)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Text(
+                                  'Dice already rolled: ${game.currentTurnDiceValue}',
+                                  style: TextStyle(
+                                    color: Colors.orange,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            InkWell(
+                              onTap: (){
+                                print('DEBUG: Dice onRoll called');
+                                _rollDice(context, gameProvider);
+                              },
+                              child: DiceWidget(
+                                value: game.currentTurnDiceValue > 0
+                                    ? game.currentTurnDiceValue
+                                    : 1,
+                                isRolling: gameProvider.isRolling,
+                                isEnabled: isMyTurn && !game.diceRolled,
+                                diceColor: playerColor,
+                                onRoll: (
+                                    // isMyTurn &&
+                                    !game.diceRolled)
+                                    ? () {
+                                  print('DEBUG: Dice onRoll called');
+                                  _rollDice(context, gameProvider);
+                                }
+                                    : (){
+                                  print("7878");
+                                  _rollDice(context, gameProvider);
+                                },
+                              ),
                             ),
                             const SizedBox(height: 8),
                             if (game.diceRolled && isMyTurn)
-                              Text(
+                              const Text(
                                 'Select a token to move',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey.shade600,
                                   fontStyle: FontStyle.italic,
                                 ),
                               ),
@@ -206,9 +258,12 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                         ),
 
                         // Right player info
-                        _buildSidePlayerInfo(game, 2),
+                        if (game.playerIds.length > 2)
+                          _buildSidePlayerInfo(game, 2),
                       ],
                     ),
+
+                    const SizedBox(height: 16),
 
                     // Valid moves indicator
                     if (game.diceRolled && isMyTurn && gameProvider.validMoves.isNotEmpty)
@@ -217,7 +272,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
+                            color: Colors.blue.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
@@ -239,10 +294,6 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                           onPressed: () => _skipTurn(context, gameProvider),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.orange,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 24,
-                              vertical: 12,
-                            ),
                           ),
                           child: const Text('No valid moves - Skip Turn'),
                         ),
@@ -265,20 +316,15 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
     final isCurrentPlayer = game.currentTurnIndex == playerIndex;
     final playerColor = _getPlayerColor(playerIndex);
     final playerName = game.playerNames[playerIndex];
-    final tokensInHome = game.tokenPositions[game.playerIds[playerIndex]]
-        ?.where((pos) => pos == -1)
-        .length ??
-        0;
-    final tokensFinished = game.tokenPositions[game.playerIds[playerIndex]]
-        ?.where((pos) => pos >= 58)
-        .length ??
-        0;
+    final playerId = game.playerIds[playerIndex];
+    final tokensInHome = game.tokenPositions[playerId]?.where((pos) => pos == -1).length ?? 0;
+    final tokensFinished = game.tokenPositions[playerId]?.where((pos) => pos >= 58).length ?? 0;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: isCurrentPlayer ? playerColor.withOpacity(0.1) : Colors.white,
+        color: isCurrentPlayer ? playerColor.withValues(alpha: 0.1) : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
           color: isCurrentPlayer ? playerColor : Colors.grey.shade300,
@@ -290,10 +336,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(
-              color: playerColor,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: playerColor, shape: BoxShape.circle),
             child: Center(
               child: Text(
                 playerName[0].toUpperCase(),
@@ -320,10 +363,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
                 ),
                 Text(
                   'Home: $tokensInHome | Finished: $tokensFinished',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -331,17 +371,10 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
           if (isCurrentPlayer)
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: playerColor,
-                borderRadius: BorderRadius.circular(12),
-              ),
+              decoration: BoxDecoration(color: playerColor, borderRadius: BorderRadius.circular(12)),
               child: const Text(
                 'Playing',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
               ),
             ),
         ],
@@ -373,7 +406,7 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             boxShadow: isCurrentPlayer
                 ? [
               BoxShadow(
-                color: playerColor.withOpacity(0.5),
+                color: playerColor.withValues(alpha: 0.5),
                 blurRadius: 10,
                 spreadRadius: 2,
               ),
@@ -384,18 +417,15 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             child: Text(
               playerName[0].toUpperCase(),
               style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-              ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20),
             ),
           ),
         ),
         const SizedBox(height: 4),
         Text(
-          playerName.length > 8
-              ? '${playerName.substring(0, 8)}...'
-              : playerName,
+          playerName.length > 8 ? '${playerName.substring(0, 8)}...' : playerName,
           style: TextStyle(
             fontSize: 11,
             fontWeight: isCurrentPlayer ? FontWeight.bold : FontWeight.normal,
@@ -407,17 +437,14 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
   }
 
   Color _getPlayerColor(int playerIndex) {
-    const colors = [
-      Colors.red,
-      Colors.green,
-      Color(0xFFFFD700), // Yellow/Gold
-      Colors.blue,
-    ];
+    const colors = [Colors.red, Colors.green, Color(0xFFFFD700), Colors.blue];
     return colors[playerIndex % colors.length];
   }
 
   Future<void> _rollDice(BuildContext context, GameProvider gameProvider) async {
+    print('DEBUG: _rollDice called for user ${widget.currentUserId}');
     await gameProvider.rollDice(widget.gameId, widget.currentUserId);
+    print('DEBUG: _rollDice completed');
   }
 
   Future<void> _skipTurn(BuildContext context, GameProvider gameProvider) async {
@@ -431,19 +458,16 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       BuildContext context,
       TapUpDetails details,
       GameModel game,
-      ) {
-    final gameProvider = context.read<GameProvider>();
-
+      GameProvider gameProvider,
+      ) async {
     if (!gameProvider.validMoves.isNotEmpty) return;
 
-    // Calculate which token was tapped (simplified - you'd need proper hit detection)
-    // For now, cycle through valid moves on each tap
     if (selectedTokenIndex == null) {
       setState(() {
         selectedTokenIndex = gameProvider.validMoves.first;
       });
     } else {
-      _moveSelectedToken(context, gameProvider);
+      await _moveSelectedToken(context, gameProvider);
     }
   }
 
@@ -465,12 +489,16 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
       setState(() {
         selectedTokenIndex = null;
       });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Token moved! Next turn.'),
+            duration: Duration(seconds: 1)),
+      );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Invalid move'),
-          duration: Duration(seconds: 1),
-        ),
+            content: Text('Invalid move'),
+            duration: Duration(seconds: 1)),
       );
     }
   }
@@ -493,11 +521,13 @@ class _GameBoardScreenState extends State<GameBoardScreen> {
             Text('Prize Pool: \$${game.totalPrize}'),
             const SizedBox(height: 8),
             Text('Status: ${game.gameStatus}'),
+            const SizedBox(height: 8),
+            Text('Current Player: ${game.playerNames[game.currentTurnIndex]}'),
+            Text('Current Turn Index: ${game.currentTurnIndex}'),
+            Text('Your User ID: ${widget.currentUserId}'),
             const SizedBox(height: 16),
-            const Text(
-              'Players:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
+            const Text('Players:',
+                style: TextStyle(fontWeight: FontWeight.bold)),
             ...game.playerNames.map((name) => Text('• $name')),
           ],
         ),

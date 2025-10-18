@@ -14,8 +14,11 @@ class TournamentProvider extends ChangeNotifier {
 
   // Getters
   List<TournamentModel> get tournaments => _tournaments;
+
   TournamentModel? get currentTournament => _currentTournament;
+
   bool get isLoading => _isLoading;
+
   String get errorMessage => _errorMessage;
 
   Future<void> loadTournaments() async {
@@ -35,11 +38,11 @@ class TournamentProvider extends ChangeNotifier {
   }
 
   Future<void> createTournament(
-      String name,
-      int maxPlayers,
-      int entryFee,
-      List<int> prizePool,
-      ) async {
+    String name,
+    int maxPlayers,
+    int entryFee,
+    List<int> prizePool,
+  ) async {
     try {
       _isLoading = true;
       _errorMessage = '';
@@ -61,7 +64,11 @@ class TournamentProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> joinTournament(String tournamentId, int entryFee, String userId) async {
+  Future<void> joinTournament(
+    String tournamentId,
+    int entryFee,
+    String userId,
+  ) async {
     try {
       _isLoading = true;
       _errorMessage = '';
@@ -85,7 +92,9 @@ class TournamentProvider extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
 
-      TournamentModel tournament = await _tournamentService.getTournament(tournamentId);
+      TournamentModel tournament = await _tournamentService.getTournament(
+        tournamentId,
+      );
       _currentTournament = tournament;
     } catch (e) {
       _errorMessage = e.toString();

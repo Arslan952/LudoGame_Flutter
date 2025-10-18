@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import '../../../models/game_model.dart';
 
-
 class LudoBoardPainter extends CustomPainter {
   final GameModel? gameState;
   final int? selectedTokenIndex;
@@ -86,8 +85,13 @@ class LudoBoardPainter extends CustomPainter {
     _drawHomeArea(canvas, 0, BOARD_SIZE - 4, colors[3], cellSize);
   }
 
-  void _drawHomeArea(Canvas canvas, int startCol, int startRow, Color color,
-      double cellSize) {
+  void _drawHomeArea(
+    Canvas canvas,
+    int startCol,
+    int startRow,
+    Color color,
+    double cellSize,
+  ) {
     for (int i = 0; i < 4; i++) {
       for (int j = 0; j < 4; j++) {
         final rect = Rect.fromLTWH(
@@ -97,15 +101,12 @@ class LudoBoardPainter extends CustomPainter {
           cellSize - 4,
         );
 
-        canvas.drawRect(
-          rect,
-          Paint()..color = color.withOpacity(0.2),
-        );
+        canvas.drawRect(rect, Paint()..color = color.withValues(alpha: 0.2));
 
         canvas.drawRect(
           rect,
           Paint()
-            ..color = color.withOpacity(0.5)
+            ..color = color.withValues(alpha: 0.5)
             ..strokeWidth = 1
             ..style = PaintingStyle.stroke,
         );
@@ -115,7 +116,7 @@ class LudoBoardPainter extends CustomPainter {
 
   void _drawSafeZones(Canvas canvas, Size size, double cellSize) {
     final safePaint = Paint()
-      ..color = Colors.purple.withOpacity(0.3)
+      ..color = Colors.purple.withValues(alpha: 0.3)
       ..style = PaintingStyle.fill;
 
     const safeSquares = [0, 8, 13, 21, 26, 34, 39, 47];
@@ -135,8 +136,11 @@ class LudoBoardPainter extends CustomPainter {
   void _drawTokens(Canvas canvas, Size size, double cellSize) {
     final colors = [Colors.red, Colors.green, Colors.yellow, Colors.blue];
 
-    for (int playerIdx = 0; playerIdx < gameState!.playerIds.length;
-    playerIdx++) {
+    for (
+      int playerIdx = 0;
+      playerIdx < gameState!.playerIds.length;
+      playerIdx++
+    ) {
       final playerId = gameState!.playerIds[playerIdx];
       final positions = gameState!.tokenPositions[playerId] ?? [];
       final playerColor = colors[playerIdx];
@@ -158,44 +162,59 @@ class LudoBoardPainter extends CustomPainter {
             offset,
             playerColor,
             tokenIdx + 1,
-            isSelected: currentPlayerId == playerId &&
-                selectedTokenIndex == tokenIdx,
+            isSelected:
+                currentPlayerId == playerId && selectedTokenIndex == tokenIdx,
           );
         } else if (position == -1) {
-          final homeOffset =
-          _getHomeTokenCoordinates(playerIdx, tokenIdx, cellSize);
+          final homeOffset = _getHomeTokenCoordinates(
+            playerIdx,
+            tokenIdx,
+            cellSize,
+          );
           _drawToken(
             canvas,
             homeOffset,
             playerColor,
             tokenIdx + 1,
             isHome: true,
-            isSelected: currentPlayerId == playerId &&
-                selectedTokenIndex == tokenIdx,
+            isSelected:
+                currentPlayerId == playerId && selectedTokenIndex == tokenIdx,
           );
         }
       }
     }
   }
 
-  Offset _getHomeTokenCoordinates(int playerIdx, int tokenIdx, double cellSize) {
+  Offset _getHomeTokenCoordinates(
+    int playerIdx,
+    int tokenIdx,
+    double cellSize,
+  ) {
     final homePositions = {
-      0: [Offset(cellSize + cellSize / 3, cellSize + cellSize / 3),
+      0: [
+        Offset(cellSize + cellSize / 3, cellSize + cellSize / 3),
         Offset(cellSize * 2, cellSize + cellSize / 3),
         Offset(cellSize + cellSize / 3, cellSize * 2),
-        Offset(cellSize * 2, cellSize * 2)],
-      1: [Offset(cellSize * 12, cellSize + cellSize / 3),
+        Offset(cellSize * 2, cellSize * 2),
+      ],
+      1: [
+        Offset(cellSize * 12, cellSize + cellSize / 3),
         Offset(cellSize * 13, cellSize + cellSize / 3),
         Offset(cellSize * 12, cellSize * 2),
-        Offset(cellSize * 13, cellSize * 2)],
-      2: [Offset(cellSize * 12, cellSize * 12),
+        Offset(cellSize * 13, cellSize * 2),
+      ],
+      2: [
+        Offset(cellSize * 12, cellSize * 12),
         Offset(cellSize * 13, cellSize * 12),
         Offset(cellSize * 12, cellSize * 13),
-        Offset(cellSize * 13, cellSize * 13)],
-      3: [Offset(cellSize + cellSize / 3, cellSize * 12),
+        Offset(cellSize * 13, cellSize * 13),
+      ],
+      3: [
+        Offset(cellSize + cellSize / 3, cellSize * 12),
         Offset(cellSize * 2, cellSize * 12),
         Offset(cellSize + cellSize / 3, cellSize * 13),
-        Offset(cellSize * 2, cellSize * 13)],
+        Offset(cellSize * 2, cellSize * 13),
+      ],
     };
 
     return homePositions[playerIdx]?[tokenIdx] ??
@@ -203,12 +222,12 @@ class LudoBoardPainter extends CustomPainter {
   }
 
   Offset _getTokenCoordinates(
-      int position,
-      int playerIdx,
-      int tokenIdx,
-      double cellSize,
-      Size size,
-      ) {
+    int position,
+    int playerIdx,
+    int tokenIdx,
+    double cellSize,
+    Size size,
+  ) {
     // Convert position to board coordinates
     double x = 0, y = 0;
 
@@ -234,21 +253,17 @@ class LudoBoardPainter extends CustomPainter {
   }
 
   void _drawToken(
-      Canvas canvas,
-      Offset offset,
-      Color color,
-      int number, {
-        bool isSelected = false,
-        bool isHome = false,
-      }) {
+    Canvas canvas,
+    Offset offset,
+    Color color,
+    int number, {
+    bool isSelected = false,
+    bool isHome = false,
+  }) {
     const tokenRadius = 10.0;
 
     // Draw token background
-    canvas.drawCircle(
-      offset,
-      tokenRadius,
-      Paint()..color = color,
-    );
+    canvas.drawCircle(offset, tokenRadius, Paint()..color = color);
 
     // Draw selection border
     if (isSelected) {

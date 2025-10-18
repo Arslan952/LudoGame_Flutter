@@ -12,7 +12,9 @@ class CoinProvider extends ChangeNotifier {
 
   // Getters
   int get coins => _coins;
+
   bool get isLoading => _isLoading;
+
   String get errorMessage => _errorMessage;
 
   Future<void> loadCoins(String userId) async {

@@ -15,9 +15,13 @@ class AuthProvider extends ChangeNotifier {
 
   // Getters
   User? get currentUser => _currentUser;
+
   UserModel? get userModel => _userModel;
+
   bool get isLoading => _isLoading;
+
   String get errorMessage => _errorMessage;
+
   bool get isLoggedIn => _currentUser != null;
 
   AuthProvider() {
@@ -33,7 +37,11 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = '';
       notifyListeners();
 
-      User? user = await _authService.signUpWithEmail(email, password, username);
+      User? user = await _authService.signUpWithEmail(
+        email,
+        password,
+        username,
+      );
 
       if (user != null) {
         _currentUser = user;

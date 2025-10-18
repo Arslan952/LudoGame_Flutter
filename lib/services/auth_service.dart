@@ -1,22 +1,25 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/cupertino.dart';
 
 class AuthService {
   final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<User?> signUpWithEmail(String email, String password, String username) async {
+  Future<User?> signUpWithEmail(
+    String email,
+    String password,
+    String username,
+  ) async {
     try {
-      print("Check Function work");
-      UserCredential result = await _firebaseAuth.createUserWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      debugPrint("Check Function work");
+      UserCredential result = await _firebaseAuth
+          .createUserWithEmailAndPassword(email: email, password: password);
 
       User? user = result.user;
 
-      print(user!.displayName);
-      print(user.email);
+      debugPrint(user!.displayName);
+      debugPrint(user.email);
 
       if (user != null) {
         await _firestore.collection('users').doc(user.uid).set({
@@ -38,8 +41,8 @@ class AuthService {
 
       return user;
     } on FirebaseAuthException catch (e) {
-      print("Creating user");
-      print(e);
+      debugPrint("Creating user");
+      debugPrint(e.toString());
       throw _handleAuthException(e);
     }
   }

@@ -9,11 +9,11 @@ import '../../screens/lobby/matchmaking_waiting_screen.dart';
 import '../../screens/profile/profile_screen.dart';
 import '../../screens/splashScreen/splashScreen.dart';
 import '../../screens/tournament/create_tournament_screen.dart';
+
 // import '../../screens/tournament/tournament_list_screen.dart';
 // import '../../screens/leaderboard/leaderboard_screen.dart';
 
 class AppRoutes {
-  // 🔹 Route names
   static const String splash = '/splash';
   static const String login = '/login';
   static const String signup = '/signup';
@@ -25,14 +25,14 @@ class AppRoutes {
   static const String profile = '/profile';
   static const String leaderboard = '/leaderboard';
 
-  // 🔹 Route map
+
   static final Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
     login: (context) => const LoginScreen(),
     signup: (context) => const SignupScreen(),
     lobby: (context) => const LobbyScreen(),
 
-    // 🟢 Matchmaking Screen
+
     matchmaking: (context) {
       final args = ModalRoute.of(context)?.settings.arguments as Map?;
       return MatchmakingWaitingScreen(
@@ -41,7 +41,7 @@ class AppRoutes {
       );
     },
 
-    // 🟩 Game Board Screen (takes dynamic arguments)
+
     gameBoard: (context) {
       final args = ModalRoute.of(context)?.settings.arguments as Map?;
       return GameBoardScreen(
@@ -50,14 +50,10 @@ class AppRoutes {
       );
     },
 
-    // 🏆 Tournament Screens
-    // tournaments: (context) => const TournamentListScreen(),
+
     createTournament: (context) => const CreateTournamentScreen(),
 
-    // 👤 Profile
     profile: (context) => const ProfileScreen(),
 
-    // 🏅 Leaderboard (if available later)
-    // leaderboard: (context) => const LeaderboardScreen(),
   };
 }

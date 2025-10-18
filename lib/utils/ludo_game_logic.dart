@@ -4,12 +4,12 @@ class LudoGameLogic {
   static const List<int> SAFE_ZONES = [0, 8, 13, 21, 26, 34, 39, 47, 52];
 
   static bool canMoveToken(
-      int currentPosition,
-      int diceValue,
-      bool isAtHome,
-      List<int> allTokenPositions,
-      int playerIndex,
-      ) {
+    int currentPosition,
+    int diceValue,
+    bool isAtHome,
+    List<int> allTokenPositions,
+    int playerIndex,
+  ) {
     if (isAtHome && diceValue != 6) {
       return false;
     }
@@ -36,10 +36,10 @@ class LudoGameLogic {
   }
 
   static List<int> getCapturable(
-      int newPosition,
-      List<int> opponentTokens,
-      int playerIndex,
-      ) {
+    int newPosition,
+    List<int> opponentTokens,
+    int playerIndex,
+  ) {
     if (isSafeZone(newPosition)) {
       return [];
     }
@@ -52,10 +52,10 @@ class LudoGameLogic {
   }
 
   static List<int> getValidMoves(
-      List<int> playerTokens,
-      int diceValue,
-      List<List<int>> allPlayersTokens,
-      ) {
+    List<int> playerTokens,
+    int diceValue,
+    List<List<int>> allPlayersTokens,
+  ) {
     List<int> validMoves = [];
 
     for (int i = 0; i < playerTokens.length; i++) {
@@ -73,11 +73,7 @@ class LudoGameLogic {
     return validMoves;
   }
 
-  static int calculateWinnings(
-      int entryFee,
-      int numPlayers,
-      int ranking,
-      ) {
+  static int calculateWinnings(int entryFee, int numPlayers, int ranking) {
     int totalPool = entryFee * numPlayers;
 
     switch (numPlayers) {

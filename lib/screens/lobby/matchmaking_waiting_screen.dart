@@ -6,16 +6,15 @@ import '../../provider/authProvider.dart';
 import '../../provider/coinProvider.dart';
 import '../../services/route/route.dart';
 
-
 class MatchmakingWaitingScreen extends StatefulWidget {
   final int numPlayers;
   final int entryFee;
 
   const MatchmakingWaitingScreen({
-    Key? key,
+    super.key,
     required this.numPlayers,
     required this.entryFee,
-  }) : super(key: key);
+  });
 
   @override
   State<MatchmakingWaitingScreen> createState() =>
@@ -72,9 +71,9 @@ class _MatchmakingWaitingScreenState extends State<MatchmakingWaitingScreen>
           'matched': false,
         });
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: ${e.toString()}')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
       }
     }
   }
@@ -86,63 +85,61 @@ class _MatchmakingWaitingScreenState extends State<MatchmakingWaitingScreen>
         .where('status', isEqualTo: 'waiting')
         .snapshots()
         .listen((snapshot) {
-      List<PlayerInfo> players = [];
-      for (var doc in snapshot.docs) {
-        players.add(
-          PlayerInfo(
-            playerId: doc['playerId'],
-            playerName: doc['playerName'],
-            avatarUrl: doc['avatarUrl'],
-            joinedAt: (doc['joinedAt'] as Timestamp).toDate(),
-          ),
-        );
-      }
+          List<PlayerInfo> players = [];
+          for (var doc in snapshot.docs) {
+            players.add(
+              PlayerInfo(
+                playerId: doc['playerId'],
+                playerName: doc['playerName'],
+                avatarUrl: doc['avatarUrl'],
+                joinedAt: (doc['joinedAt'] as Timestamp).toDate(),
+              ),
+            );
+          }
 
-      setState(() {
-        waitingPlayers = players;
-      });
+          setState(() {
+            waitingPlayers = players;
+          });
 
-      // Check if game should start
-      if (waitingPlayers.length >= widget.numPlayers && !gameStarted) {
-        _createGame();
-      }
-    });
+          // Check if game should start
+          if (waitingPlayers.length >= widget.numPlayers && !gameStarted) {
+            _createGame();
+          }
+        });
   }
 
   Future<void> _createGame() async {
     try {
       setState(() => gameStarted = true);
 
-      List<String> playerIds =
-      waitingPlayers.map((p) => p.playerId).toList();
-      List<String> playerNames =
-      waitingPlayers.map((p) => p.playerName).toList();
+      List<String> playerIds = waitingPlayers.map((p) => p.playerId).toList();
+      List<String> playerNames = waitingPlayers
+          .map((p) => p.playerName)
+          .toList();
 
       // Create game document
-      DocumentReference gameRef =
-      await FirebaseFirestore.instance.collection('games').add({
-        'playerIds': playerIds.take(widget.numPlayers).toList(),
-        'playerNames': playerNames.take(widget.numPlayers).toList(),
-        'playerColors': List.generate(
-          widget.numPlayers,
-              (i) => i,
-        ),
-        'currentTurnPlayerId': playerIds.first,
-        'currentTurnIndex': 0,
-        'currentTurnDiceValue': 0,
-        'tokenPositions': {
-          for (String id in playerIds.take(widget.numPlayers))
-            id: [-1, -1, -1, -1],
-        },
-        'gameStatus': 'playing',
-        'winnerId': null,
-        'playerRanking': [],
-        'entryFee': widget.entryFee,
-        'totalPrize': widget.entryFee * widget.numPlayers,
-        'createdAt': Timestamp.now(),
-        'updatedAt': Timestamp.now(),
-        'moveHistory': [],
-      });
+      DocumentReference gameRef = await FirebaseFirestore.instance
+          .collection('games')
+          .add({
+            'playerIds': playerIds.take(widget.numPlayers).toList(),
+            'playerNames': playerNames.take(widget.numPlayers).toList(),
+            'playerColors': List.generate(widget.numPlayers, (i) => i),
+            'currentTurnPlayerId': playerIds.first,
+            'currentTurnIndex': 0,
+            'currentTurnDiceValue': 0,
+            'tokenPositions': {
+              for (String id in playerIds.take(widget.numPlayers))
+                id: [-1, -1, -1, -1],
+            },
+            'gameStatus': 'playing',
+            'winnerId': null,
+            'playerRanking': [],
+            'entryFee': widget.entryFee,
+            'totalPrize': widget.entryFee * widget.numPlayers,
+            'createdAt': Timestamp.now(),
+            'updatedAt': Timestamp.now(),
+            'moveHistory': [],
+          });
 
       gameId = gameRef.id;
 
@@ -217,7 +214,7 @@ class _MatchmakingWaitingScreenState extends State<MatchmakingWaitingScreen>
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.white.withOpacity(0.8),
+                          color: Colors.white.withValues(alpha: 0.8),
                         ),
                         child: Center(
                           child: Text(
@@ -251,7 +248,7 @@ class _MatchmakingWaitingScreenState extends State<MatchmakingWaitingScreen>
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withOpacity(0.1),
+                                color: Colors.black.withValues(alpha: 0.1),
                                 blurRadius: 8,
                               ),
                             ],
@@ -326,8 +323,7 @@ class _MatchmakingWaitingScreenState extends State<MatchmakingWaitingScreen>
                       ),
                     ),
                   ),
-                if (waitingPlayers.length == widget.numPlayers &&
-                    gameStarted)
+                if (waitingPlayers.length == widget.numPlayers && gameStarted)
                   Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
@@ -336,10 +332,7 @@ class _MatchmakingWaitingScreenState extends State<MatchmakingWaitingScreen>
                         const SizedBox(height: 12),
                         const Text(
                           'Starting Game...',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                          ),
+                          style: TextStyle(color: Colors.white, fontSize: 16),
                         ),
                       ],
                     ),
@@ -383,9 +376,9 @@ class _MatchmakingWaitingScreenState extends State<MatchmakingWaitingScreen>
         Navigator.pop(context);
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: ${e.toString()}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: ${e.toString()}')));
     }
   }
 }

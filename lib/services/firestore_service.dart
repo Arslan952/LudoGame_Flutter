@@ -6,7 +6,10 @@ class FirestoreService {
 
   Future<UserModel> getUser(String uid) async {
     try {
-      DocumentSnapshot doc = await _firestore.collection('users').doc(uid).get();
+      DocumentSnapshot doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .get();
       if (doc.exists) {
         return UserModel.fromFirestore(doc);
       }
@@ -34,9 +37,7 @@ class FirestoreService {
 
   Future<void> updateUserStatus(String uid, String status) async {
     try {
-      await _firestore.collection('users').doc(uid).update({
-        'status': status,
-      });
+      await _firestore.collection('users').doc(uid).update({'status': status});
     } catch (e) {
       throw 'Failed to update status: $e';
     }
@@ -50,9 +51,7 @@ class FirestoreService {
           .limit(limit)
           .get();
 
-      return snapshot.docs
-          .map((doc) => UserModel.fromFirestore(doc))
-          .toList();
+      return snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList();
     } catch (e) {
       throw 'Failed to fetch leaderboard: $e';
     }
@@ -64,8 +63,9 @@ class FirestoreService {
         .orderBy('coins', descending: true)
         .limit(limit)
         .snapshots()
-        .map((snapshot) => snapshot.docs
-        .map((doc) => UserModel.fromFirestore(doc))
-        .toList());
+        .map(
+          (snapshot) =>
+              snapshot.docs.map((doc) => UserModel.fromFirestore(doc)).toList(),
+        );
   }
 }

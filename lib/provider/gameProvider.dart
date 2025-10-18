@@ -13,12 +13,16 @@ class GameProvider extends ChangeNotifier {
   String _errorMessage = '';
   List<int> _validMoves = [];
 
-  // Getters
   GameModel? get currentGame => _currentGame;
+
   int get currentDiceValue => _currentDiceValue;
+
   bool get isRolling => _isRolling;
+
   bool get isLoading => _isLoading;
+
   String get errorMessage => _errorMessage;
+
   List<int> get validMoves => _validMoves;
 
   Future<void> createGame({
@@ -53,6 +57,7 @@ class GameProvider extends ChangeNotifier {
 
       _currentGame = await _gameService.getGame(gameId);
       _currentDiceValue = _currentGame?.currentTurnDiceValue ?? 0;
+      _updateValidMoves();
     } catch (e) {
       _errorMessage = e.toString();
     } finally {
@@ -62,48 +67,69 @@ class GameProvider extends ChangeNotifier {
   }
 
   void streamGame(String gameId) {
-    _gameService.streamGame(gameId).listen((game) {
-      _currentGame = game;
-      _currentDiceValue = game.currentTurnDiceValue;
-      _updateValidMoves();
-      notifyListeners();
-    }, onError: (e) {
-      _errorMessage = e.toString();
-      notifyListeners();
-    });
+    _gameService
+        .streamGame(gameId)
+        .listen(
+          (game) {
+            _currentGame = game;
+            _currentDiceValue = game.currentTurnDiceValue;
+            _updateValidMoves();
+            notifyListeners();
+          },
+          onError: (e) {
+            _errorMessage = e.toString();
+            notifyListeners();
+          },
+        );
   }
 
   Future<void> rollDice(String gameId, String playerId) async {
     try {
-      if (_isRolling || _currentGame?.diceRolled == true) return;
+      // Check if already rolling
+      if (_isRolling) {
+        debugPrint('DEBUG: Already rolling');
+        return;
+      }
 
+      // Check if dice already rolled
+      if (_currentGame?.diceRolled == true) {
+        debugPrint('DEBUG: Dice already rolled');
+        return;
+      }
+
+      // SET ROLLING TO TRUE FIRST - THIS UPDATES THE UI IMMEDIATELY
       _isRolling = true;
-      notifyListeners();
+      notifyListeners(); // Notify UI that dice is rolling
+      debugPrint('DEBUG: Set isRolling to true, notified listeners');
 
+      // Simulate rolling for 600ms
+      await Future.delayed(const Duration(milliseconds: 600));
+
+      // Now call the service to roll
       int diceValue = await _gameService.rollDice(gameId);
       _currentDiceValue = diceValue;
       _updateValidMoves();
 
-      await Future.delayed(const Duration(milliseconds: 800));
+      debugPrint('DEBUG: Rolled dice: $diceValue');
     } catch (e) {
       _errorMessage = e.toString();
+      debugPrint('DEBUG: Error rolling dice: $_errorMessage');
     } finally {
+      // SET ROLLING TO FALSE AND NOTIFY
       _isRolling = false;
-      notifyListeners();
+      notifyListeners(); // Notify UI that dice stopped rolling
+      debugPrint('DEBUG: Set isRolling to false, notified listeners');
     }
   }
 
-  Future<bool> moveToken(
-      String gameId,
-      int tokenIndex,
-      String playerId,
-      ) async {
+  Future<bool> moveToken(String gameId, int tokenIndex, String playerId) async {
     try {
       if (_currentGame == null || !_validMoves.contains(tokenIndex)) {
         return false;
       }
 
-      int currentPos = _currentGame!.tokenPositions[playerId]?[tokenIndex] ?? -1;
+      int currentPos =
+          _currentGame!.tokenPositions[playerId]?[tokenIndex] ?? -1;
       int newPos = LudoMoveLogic.moveToken(
         currentPos,
         _currentDiceValue,
@@ -122,8 +148,12 @@ class GameProvider extends ChangeNotifier {
     try {
       await _gameService.nextTurn(gameId);
       await Future.delayed(const Duration(milliseconds: 500));
+      _currentDiceValue = 0;
+      _validMoves = [];
+      notifyListeners();
     } catch (e) {
       _errorMessage = e.toString();
+      notifyListeners();
     }
   }
 
@@ -134,7 +164,8 @@ class GameProvider extends ChangeNotifier {
     }
 
     String currentPlayerId = _currentGame!.currentPlayerId;
-    List<int> tokenPositions = _currentGame!.tokenPositions[currentPlayerId] ?? [];
+    List<int> tokenPositions =
+        _currentGame!.tokenPositions[currentPlayerId] ?? [];
 
     _validMoves = [];
     for (int i = 0; i < tokenPositions.length; i++) {
@@ -149,10 +180,10 @@ class GameProvider extends ChangeNotifier {
   }
 
   Future<void> completeGame(
-      String gameId,
-      String winnerId,
-      List<String> ranking,
-      ) async {
+    String gameId,
+    String winnerId,
+    List<String> ranking,
+  ) async {
     try {
       await _gameService.completeGame(gameId, winnerId, ranking);
     } catch (e) {
